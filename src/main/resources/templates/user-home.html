@@ -2,19 +2,79 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>User Home</title>
+    <title>Admin Panel</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #sidebar {
+            width: 200px;
+            min-height: 100vh;
+            background-color: #343a40;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar-brand, .nav-link, .btn-outline-light {
+            color: #007bff;
+        }
+        .nav-link:hover, .btn-outline-light:hover {
+            background-color: #007bff;
+            color: white !important;
+        }
+
+        .text-blue {
+            color: #007bff !important;
+        }
+    </style>
 </head>
 <body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">Admin Panel</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto"></ul>
+        <form th:action="@{/logout}" method="post" class="form-inline ml-2">
+            <button class="btn btn-outline-light" type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+<div class="d-flex">
+    <div class="bg-white p-3" id="sidebar">
+        <nav class="nav flex-column">
+            <a class="nav-link text-white text-blue" href="/user-home">User</a>
+        </nav>
+    </div>
+    <div class="container mt-4 flex-grow-1">
+        <div class="card mt-3">
+            <div class="card-header">
+                Logged-in User
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td th:text="${user.id}">1</td>
+                        <td th:text="${user.name}">Name</td>
+                        <td th:text="${user.email}">Email</td>
+                        <td th:text="${user.getRoleNames()}">Role</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-<h1>User Home Page</h1>
-
-<p>ID: <span th:text="${user.id}"></span></p>
-<p>Name: <span th:text="${user.name}"></span></p>
-<p>Email: <span th:text="${user.email}"></span></p>
-
-<form th:action="@{/logout}" method="post">
-    <input type="submit" value="Logout">
-</form>
-
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

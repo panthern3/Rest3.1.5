@@ -8,8 +8,10 @@ import ru.kata.spring.boot_security.demo.example.model.Role;
 import ru.kata.spring.boot_security.demo.example.model.User;
 import ru.kata.spring.boot_security.demo.example.service.UserService;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/users")
@@ -53,8 +55,23 @@ public class UserController {
                              @RequestParam("name") String name,
                              @RequestParam("email") String email,
                              @RequestParam("password") String password,
-                             @RequestParam Set<Role> roles) {
+                             @RequestParam("roles") String rolesString) {
+        Set<Role> roles = Arrays.stream(rolesString.split(","))
+                .map(this::findRoleByName)
+                .collect(Collectors.toSet());
         userService.updateUser(new User(id, name, email, password), roles);
         return "redirect:/users";
+    }
+
+    private Role findRoleByName(String roleName) {
+        // Пример реализации метода поиска роли
+        switch (roleName.trim()) {
+            case "ROLE_USER":
+                return new Role("ROLE_USER");
+            case "ROLE_ADMIN":
+                return new Role("ROLE_ADMIN");
+            default:
+                throw new IllegalArgumentException("Unknown role: " + roleName);
+        }
     }
 }
