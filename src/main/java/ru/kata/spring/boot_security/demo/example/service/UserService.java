@@ -13,4 +13,6 @@ public interface UserService {
     void deleteUser(Long id);
     User findById(Long id);
     User findByEmail(String email);
+
+    Role findRoleByName(String roleName);
 }

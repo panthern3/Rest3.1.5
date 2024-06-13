@@ -1,4 +1,4 @@
-package ru.kata.spring.boot_security.demo.services;
+package ru.kata.spring.boot_security.demo.example.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import ru.kata.spring.boot_security.demo.example.model.Role;

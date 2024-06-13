@@ -8,6 +8,7 @@ import ru.kata.spring.boot_security.demo.example.model.Role;
 import ru.kata.spring.boot_security.demo.example.model.User;
 import ru.kata.spring.boot_security.demo.example.service.UserService;
 
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -55,23 +56,22 @@ public class UserController {
                              @RequestParam("name") String name,
                              @RequestParam("email") String email,
                              @RequestParam("password") String password,
-                             @RequestParam("roles") String rolesString) {
+                             @RequestParam("roles") String rolesString,
+                             Model model) {
         Set<Role> roles = Arrays.stream(rolesString.split(","))
-                .map(this::findRoleByName)
+                .filter(role -> !role.trim().isEmpty())
+                .map(userService::findRoleByName)
                 .collect(Collectors.toSet());
+
+        if (roles.isEmpty()) {
+            model.addAttribute("error", "User must have at least one role.");
+            model.addAttribute("user", new User(id, name, email, password)); // Add the current user details
+            model.addAttribute("roles", rolesString); // Add the entered roles back to the model
+            return "updateUserForm"; // Assuming this is the name of your update form template
+        }
+
         userService.updateUser(new User(id, name, email, password), roles);
         return "redirect:/users";
     }
 
-    private Role findRoleByName(String roleName) {
-        // Пример реализации метода поиска роли
-        switch (roleName.trim()) {
-            case "ROLE_USER":
-                return new Role("ROLE_USER");
-            case "ROLE_ADMIN":
-                return new Role("ROLE_ADMIN");
-            default:
-                throw new IllegalArgumentException("Unknown role: " + roleName);
-        }
-    }
 }

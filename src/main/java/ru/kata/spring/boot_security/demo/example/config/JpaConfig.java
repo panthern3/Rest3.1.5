@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
-@EnableJpaRepositories(basePackages = {"ru.kata.spring.boot_security.demo.services"})
+@EnableJpaRepositories(basePackages = {"ru.kata.spring.boot_security.demo.example.repository"})
 @EntityScan(basePackages = {"ru.kata.spring.boot_security.demo.example.model"})
 
 public class JpaConfig {
