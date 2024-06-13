@@ -11,10 +11,6 @@
             background-color: #343a40;
         }
 
-        #newUserForm {
-            display: none;
-        }
-
         body {
             background-color: #f8f9fa;
         }
@@ -27,21 +23,14 @@
             color: white !important;
         }
 
-        .modal-body form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
         .text-blue {
             color: #007bff !important;
         }
-
     </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Admin Panel</a>
+    <a class="navbar-brand" href="/users">Admin Panel</a>
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto"></ul>
         <form th:action="@{/logout}" method="post" class="form-inline ml-2">
@@ -49,11 +38,10 @@
         </form>
     </div>
 </nav>
-<div class="d-flex" style="padding-top: 0px;">
+<div class="d-flex">
     <div class="bg-white p-3" id="sidebar">
         <nav class="nav flex-column">
-            <a class="nav-link text-white active text-blue" href="#">Admin</a>
-            <a class="nav-link text-white text-blue" href="/user-home">User</a>
+            <a class="nav-link text-white text-blue" href="#" onclick="showUserHome()">User</a>
         </nav>
     </div>
     <div class="container mt-4 flex-grow-1">
@@ -61,7 +49,7 @@
             <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('usersTable')">Users table</a>
+                        <a class="nav-link active" href="#" onclick="showSection('usersTable')">Users table</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" onclick="showSection('newUserForm')">New User</a>
@@ -81,26 +69,7 @@
                         <th>Delete</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <tr th:each="user : ${users}">
-                        <td th:text="${user.id}">1</td>
-                        <td th:text="${user.name}">Last Name</td>
-                        <td th:text="${user.email}">Email</td>
-                        <td th:text="${user.getRoleNames()}">Role</td>
-                        <td>
-                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#editUserModal"
-                                    th:attr="data-id=${user.id}, data-name=${user.name}, data-email=${user.email}, data-password=${user.password}, data-roles=${user.getRoleNames()}"
-                                    onclick="fillEditModal(this)">Edit
-                            </button>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-danger" data-toggle="modal"
-                                    data-target="#deleteUserModal"
-                                    th:attr="data-id=${user.id}, data-name=${user.name}, data-email=${user.email}, data-roles=${user.getRoleNames()}"
-                                    onclick="fillDeleteModal(this)">Delete
-                            </button>
-                        </td>
-                    </tr>
+                    <tbody id="usersTableBody">
                     </tbody>
                 </table>
             </div>
@@ -118,7 +87,7 @@
                 </ul>
             </div>
             <div class="card-body d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-                <form th:action="@{/users/add}" method="post">
+                <form id="addUserForm">
                     <div class="form-group">
                         <label for="addFirstName">Name</label>
                         <input type="text" class="form-control" id="addFirstName" name="name" required>
@@ -154,7 +123,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form id="deleteUserForm" th:action="@{/users/delete}" method="post">
+                        <form id="deleteUserForm">
                             <input type="hidden" name="id" id="deleteId">
                             <div class="form-group">
                                 <label for="deleteName">Name</label>
@@ -175,7 +144,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-danger" form="deleteUserForm">Delete</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteUser()">Delete</button>
                     </div>
                 </div>
             </div>
@@ -192,7 +161,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form id="editUserForm" th:action="@{/users/update}" method="post">
+                        <form id="editUserForm">
                             <input type="hidden" name="id" id="editId">
                             <div class="form-group">
                                 <label for="editFirstName">Name</label>
@@ -220,61 +189,196 @@
             </div>
         </div>
 
+        <!-- User Home Section -->
+        <div class="card mt-3" id="userHome" style="display: none;">
+            <div class="card-header">
+                Logged-in User
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td id="loggedInUserId">1</td>
+                        <td id="loggedInUserName">Name</td>
+                        <td id="loggedInUserEmail">Email</td>
+                        <td id="loggedInUserRoles">Role</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    function fillEditModal(button) {
-        const id = button.getAttribute('data-id');
-        const name = button.getAttribute('data-name');
-        const email = button.getAttribute('data-email');
-        const password = button.getAttribute('data-password');
-        const roles = button.getAttribute('data-roles');
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUsers();
 
-        document.getElementById('editId').value = id;
-        document.getElementById('editFirstName').value = name;
-        document.getElementById('editEmail').value = email;
-        document.getElementById('editPassword').value = password;
+        document.getElementById('addUserForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            addUser();
+        });
 
-        const editRoles = document.getElementById('editRoles');
-        const rolesArray = roles.split(',');
+        document.getElementById('editUserForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            updateUser();
+        });
+    });
 
-        for (let i = 0; i < editRoles.options.length; i++) {
-            editRoles.options[i].selected = rolesArray.includes(editRoles.options[i].value);
-        }
+    function loadUsers() {
+        fetch('/api/users')
+            .then(response => response.json())
+            .then(users => {
+                const usersTableBody = document.getElementById('usersTableBody');
+                usersTableBody.innerHTML = '';
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.roles.map(role => role.name).join(', ')}</td>
+                        <td><button type="button" class="btn btn-info" data-toggle="modal" data-target="#editUserModal" onclick="fillEditModal(${user.id})">Edit</button></td>
+                        <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteUserModal" onclick="fillDeleteModal(${user.id})">Delete</button></td>
+                    `;
+                    usersTableBody.appendChild(row);
+                });
+            });
+    }
+
+    function addUser() {
+        const formData = new FormData(document.getElementById('addUserForm'));
+        const roles = Array.from(document.getElementById('addRoles').selectedOptions).map(option => option.value);
+        fetch('/api/users/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: formData.get('name'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                roles: roles
+            })
+        }).then(response => {
+            if (response.ok) {
+                loadUsers();
+                showSection('usersTable');
+            } else {
+                alert('Error adding user');
+            }
+        });
+    }
+
+    function fillEditModal(userId) {
+        fetch(`/api/users/${userId}`)
+            .then(response => response.json())
+            .then(user => {
+                document.getElementById('editId').value = user.id;
+                document.getElementById('editFirstName').value = user.name;
+                document.getElementById('editEmail').value = user.email;
+                document.getElementById('editPassword').value = user.password;
+
+                const roles = user.roles.map(role => role.name);
+                const editRoles = document.getElementById('editRoles');
+                for (let i = 0; i < editRoles.options.length; i++) {
+                    editRoles.options[i].selected = roles.includes(editRoles.options[i].value);
+                }
+            });
+    }
+
+    function updateUser() {
+        const formData = new FormData(document.getElementById('editUserForm'));
+        const roles = Array.from(document.getElementById('editRoles').selectedOptions).map(option => option.value);
+        fetch(`/api/users/update`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: formData.get('id'),
+                name: formData.get('name'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                roles: roles.join(',')
+            })
+        }).then(response => {
+            if (response.ok) {
+                loadUsers();
+                $('#editUserModal').modal('hide');
+            } else {
+                alert('Error updating user');
+            }
+        });
+    }
+
+    let deleteUserId; // Глобальная переменная для хранения userId
+
+    function fillDeleteModal(userId) {
+        deleteUserId = userId; // Установка userId в глобальную переменную
+        fetch(`/api/users/${userId}`)
+            .then(response => response.json())
+            .then(user => {
+                document.getElementById('deleteId').value = user.id;
+                document.getElementById('deleteName').value = user.name;
+                document.getElementById('deleteEmail').value = user.email;
+
+                const roles = user.roles.map(role => role.name);
+                const deleteRoles = document.getElementById('deleteRoles');
+                for (let i = 0; i < deleteRoles.options.length; i++) {
+                    deleteRoles.options[i].selected = roles.includes(deleteRoles.options[i].value);
+                }
+            });
+    }
+
+    function deleteUser() {
+        const userId = deleteUserId; // Получение userId из глобальной переменной
+        fetch(`/api/users/delete/${userId}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (response.ok) {
+                    loadUsers();
+                    $('#deleteUserModal').modal('hide');
+                } else {
+                    throw new Error('Ошибка удаления пользователя');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Ошибка удаления пользователя');
+            });
     }
 
 
-    function fillDeleteModal(button) {
-        const id = button.getAttribute('data-id');
-        const name = button.getAttribute('data-name');
-        const email = button.getAttribute('data-email');
-        const roles = button.getAttribute('data-roles');
-
-        document.getElementById('deleteId').value = id;
-        document.getElementById('deleteName').value = name;
-        document.getElementById('deleteEmail').value = email;
-
-        const deleteRoles = document.getElementById('deleteRoles');
-        const rolesArray = roles.split(',');
-
-        for (let i = 0; i < deleteRoles.options.length; i++) {
-            deleteRoles.options[i].selected = rolesArray.includes(deleteRoles.options[i].value);
-        }
-    }
-
-    function toggleNewUserForm() {
-        var form = document.getElementById('newUserForm');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
 
     function showSection(sectionId) {
         document.getElementById('usersTable').style.display = 'none';
         document.getElementById('newUserForm').style.display = 'none';
+        document.getElementById('userHome').style.display = 'none';
         document.getElementById(sectionId).style.display = 'block';
     }
-    /*]]>*/
+
+    function showUserHome() {
+        fetch('/api/users/home')
+            .then(response => response.json())
+            .then(user => {
+                document.getElementById('loggedInUserId').textContent = user.id;
+                document.getElementById('loggedInUserName').textContent = user.name;
+                document.getElementById('loggedInUserEmail').textContent = user.email;
+                document.getElementById('loggedInUserRoles').textContent = user.roles.map(role => role.name).join(', ');
+
+                showSection('userHome');
+            });
+    }
 </script>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

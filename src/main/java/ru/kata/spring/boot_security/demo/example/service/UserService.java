@@ -15,4 +15,6 @@ public interface UserService {
     User findByEmail(String email);
 
     Role findRoleByName(String roleName);
+
+    User getUserById(Long id);
 }

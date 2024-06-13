@@ -1,21 +1,21 @@
 package ru.kata.spring.boot_security.demo.example.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.example.model.Role;
 import ru.kata.spring.boot_security.demo.example.model.User;
 import ru.kata.spring.boot_security.demo.example.service.UserService;
 
-
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-@Controller
-@RequestMapping("/users")
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
@@ -26,52 +26,36 @@ public class UserController {
     }
 
     @GetMapping
-    public String getAllUsers(Model model) {
+    public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        model.addAttribute("users", users);
-        return "users";
+        return ResponseEntity.ok(users);
     }
 
     @PostMapping("/add")
-    public String addUser(@RequestParam("name") String name,
-                          @RequestParam("email") String email,
-                          @RequestParam("password") String password,
-                          @RequestParam("roles") Set<Role> roles) {
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setPassword(password);
-        userService.addUser(user, roles);
-        return "redirect:/users";
+    public ResponseEntity<User> addUser(@RequestBody User user) {
+        userService.addUser(user, user.getRoles());
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @PostMapping("/delete")
-    public String deleteUser(@RequestParam("id") Long id) {
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
-        return "redirect:/users";
+        return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/update")
-    public String updateUser(@RequestParam("id") Long id,
-                             @RequestParam("name") String name,
-                             @RequestParam("email") String email,
-                             @RequestParam("password") String password,
-                             @RequestParam("roles") String rolesString,
-                             Model model) {
-        Set<Role> roles = Arrays.stream(rolesString.split(","))
-                .filter(role -> !role.trim().isEmpty())
-                .map(userService::findRoleByName)
-                .collect(Collectors.toSet());
+    @PutMapping("/update/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable("id") Long id, @RequestBody User user) {
+        user.setId(id);
+        userService.updateUser(user, user.getRoles());
+        return ResponseEntity.ok(user);
+    }
 
-        if (roles.isEmpty()) {
-            model.addAttribute("error", "User must have at least one role.");
-            model.addAttribute("user", new User(id, name, email, password)); // Add the current user details
-            model.addAttribute("roles", rolesString); // Add the entered roles back to the model
-            return "updateUserForm"; // Assuming this is the name of your update form template
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
         }
-
-        userService.updateUser(new User(id, name, email, password), roles);
-        return "redirect:/users";
+        return ResponseEntity.ok(user);
     }
-
 }

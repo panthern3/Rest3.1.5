@@ -1,5 +1,6 @@
 package ru.kata.spring.boot_security.demo.example.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -8,9 +9,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 
 @Entity
 @Table(name = "users_table")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class User implements UserDetails {
 
     @Id
@@ -31,6 +38,7 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @JsonManagedReference
     private Set<Role> roles;
 
     // Конструкторы
@@ -94,6 +102,7 @@ public class User implements UserDetails {
         this.email = email;
     }
 
+    @JsonIgnore
     public Set<Role> getRoles() {
         return roles;
     }
