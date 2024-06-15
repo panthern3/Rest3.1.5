@@ -1,9 +1,11 @@
 package ru.kata.spring.boot_security.demo.example.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -14,12 +16,12 @@ public class Role implements GrantedAuthority {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
+    @Column(nullable = false, unique = true)
     private String name;
 
     @ManyToMany(mappedBy = "roles")
-    @JsonBackReference
-    private Set<User> users;
+    @JsonIgnore
+    private Set<User> users = new HashSet<>();
 
     // Конструкторы
     public Role() {
@@ -29,14 +31,11 @@ public class Role implements GrantedAuthority {
         this.name = name;
     }
 
-
     // Геттеры и сеттеры
+    // Для id лучше не делать сеттер, если не требуется изменение id в коде
+
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {

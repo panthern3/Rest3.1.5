@@ -58,4 +58,12 @@ public class UserController {
         }
         return ResponseEntity.ok(user);
     }
+
+    @GetMapping("/home")
+    public ResponseEntity<User> getUserHome() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        User user = userService.findByEmail(email);
+        return ResponseEntity.ok(user);
+    }
 }

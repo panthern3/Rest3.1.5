@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.persistence.*;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -17,19 +18,19 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 @Entity
 @Table(name = "users_table")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
+    @Column(nullable = false)
     private String name;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String password;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -38,8 +39,7 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    @JsonManagedReference
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     // Конструкторы
     public User() {
@@ -51,33 +51,9 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public User(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
-
-    public User(Long id, String name, String email) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-    }
-
-
-    public User(Long id, String name, String email, String password) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.password = password;
-    }
-
-    public String getRoleNames() {
-        return roles.stream()
-                .map(Role::getName)
-                .collect(Collectors.joining(", "));
-    }
-
-
     // Геттеры и сеттеры
+    // Для id лучше не делать сеттер, если не требуется изменение id в коде
+
     public Long getId() {
         return id;
     }
@@ -102,7 +78,14 @@ public class User implements UserDetails {
         this.email = email;
     }
 
-    @JsonIgnore
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public Set<Role> getRoles() {
         return roles;
     }
@@ -114,11 +97,6 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
     }
 
     @Override

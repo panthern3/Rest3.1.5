@@ -298,17 +298,17 @@
     function updateUser() {
         const formData = new FormData(document.getElementById('editUserForm'));
         const roles = Array.from(document.getElementById('editRoles').selectedOptions).map(option => option.value);
-        fetch(`/api/users/update`, {
+        fetch(`/api/users/update/${formData.get('id')}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json' // <-- Здесь устанавливаем Content-Type на application/json
             },
             body: JSON.stringify({
                 id: formData.get('id'),
                 name: formData.get('name'),
                 email: formData.get('email'),
                 password: formData.get('password'),
-                roles: roles.join(',')
+                roles: roles // <-- Отправляем массив ролей напрямую
             })
         }).then(response => {
             if (response.ok) {
